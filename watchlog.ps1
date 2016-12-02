@@ -16,7 +16,7 @@ function how_many_lines {
   param ( [string] $logFile )
   $count = 0
   If (Test-Path $logFile){
-  Get-Content -Path $logFile -ReadCount 100 |% { $count++ }
+  Get-Content -Path $logFile -ReadCount 100 |% { $count += $_.Count }
   } else {
     write-host "FAIL! unable to find $logFile"
 	exit 2
