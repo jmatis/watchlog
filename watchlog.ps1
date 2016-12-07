@@ -13,7 +13,7 @@ Param(
   
   # powershell regular multiline expression pattern 
   [Parameter(Mandatory=$True)]
-  [string]$pattern
+  [regex]$pattern
 )
 
 
@@ -62,15 +62,12 @@ if ( $currentlines -ne $oldlines) {
   # current lines bigger than in previous lines (file grew )
   if ( $currentlines -gt $oldlines ){
     $lastlines = $currentlines - $oldlines
-    $found=get-Content -Path $logFile -tail $lastlines | out-string
+    [string]$found=get-Content -Path $logFile -tail $lastlines
   # current lines smaller than in previous run (new file )
   } elseif ( $oldlines -gt $currentlines) {
-    $found=get-Content -Path $logFile | out-string
+    [string]$found=get-Content -Path $logFile
   }
-  
-  if ( $found | select-string -pattern $pattern -quiet ) {
-     $found | select-string -pattern $pattern >> $flagfile
-  }
+  $regex.Matches($found) | foreach-object {$_.Value} >> $flagfile
 }
 
 # store number of lines we have analized 
