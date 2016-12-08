@@ -13,26 +13,24 @@ Param(
   
   # powershell regular multiline expression pattern 
   [Parameter(Mandatory=$True)]
-  [regex]$pattern
+  [string]$pattern
 )
-
 
 function how_many_lines {
   # checks how many lines are in logfile
   param ( [string] $logFile )
   $count = 0
   If (Test-Path $logFile){
-  Get-Content -Path $logFile -ReadCount 100 |% { $count += $_.Count }
+    Get-Content -Path $logFile -ReadCount 100 |% { $count += $_.Count }
   } else {
     write-host "FAIL! unable to find $logFile"
-    exit 2
+	  exit 2
   }
   return ($count)
 }
 
-
 function load_previous_lines{
-  # loads number from file
+  # loads number of how many lines was processed at the end of  previous run from file
   param ( [string] $bookmarkfile )
   $lines=0
   If (Test-Path($bookmarkfile)){
@@ -41,7 +39,6 @@ function load_previous_lines{
   }
   return($lines)
 }
-
 
 function save_previous_lines{
   # saves number to file 
@@ -62,12 +59,16 @@ if ( $currentlines -ne $oldlines) {
   # current lines bigger than in previous lines (file grew )
   if ( $currentlines -gt $oldlines ){
     $lastlines = $currentlines - $oldlines
-    [string]$found=get-Content -Path $logFile -tail $lastlines
+    $found=get-Content -Path $logFile -tail $lastlines 
   # current lines smaller than in previous run (new file )
   } elseif ( $oldlines -gt $currentlines) {
-    [string]$found=get-Content -Path $logFile
+    $found=get-Content -Path $logFile
   }
-  $regex.Matches($found) | foreach-object {$_.Value} >> $flagfile
+  foreach ($line in $found) {
+    if ( $line | select-string -pattern $pattern -quiet ) {
+	  $line >> $flagfile
+    }
+  }
 }
 
 # store number of lines we have analized 
